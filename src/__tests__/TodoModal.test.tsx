@@ -1,6 +1,8 @@
 // React is used implicitly
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TodoModal } from '../components/TodoModal/TodoModal';
 import { useTodo } from '../hooks/useTodo';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -9,6 +11,10 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 vi.mock('../hooks/useTodo', () => ({
   useTodo: vi.fn(),
 }));
+
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>
+);
 
 describe('TodoModal Component', () => {
   const mockAddTodo = vi.fn();
@@ -27,7 +33,11 @@ describe('TodoModal Component', () => {
   });
 
   it('renders create modal correctly', () => {
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="create" />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="create" />
+      </TestWrapper>
+    );
 
     // Check that the modal title is displayed
     expect(screen.getByText('Create Todo')).toBeInTheDocument();
@@ -50,7 +60,11 @@ describe('TodoModal Component', () => {
       completed: false,
     };
 
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="edit" initialValues={mockTodo} />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="edit" initialValues={mockTodo} />
+      </TestWrapper>
+    );
 
     // Check that the modal title is displayed
     expect(screen.getByText('Edit Todo')).toBeInTheDocument();
@@ -64,7 +78,11 @@ describe('TodoModal Component', () => {
 
   it('does not submit when title is empty', async () => {
     const user = userEvent.setup();
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="create" />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="create" />
+      </TestWrapper>
+    );
 
     // Try to submit without entering a title
     const submitButton = screen.getByTestId('submit-button');
@@ -77,7 +95,11 @@ describe('TodoModal Component', () => {
 
   it('calls addTodo when form is submitted in create mode', async () => {
     const user = userEvent.setup();
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="create" />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="create" />
+      </TestWrapper>
+    );
 
     // Fill in form fields
     await user.type(screen.getByTestId('title-input'), 'New Todo');
@@ -88,7 +110,7 @@ describe('TodoModal Component', () => {
     await user.click(submitButton);
 
     // Should call addTodo with correct values
-    expect(mockAddTodo).toHaveBeenCalledWith('New Todo', 'New Description');
+    expect(mockAddTodo).toHaveBeenCalledWith('New Todo', 'New Description', undefined);
 
     // Should close the modal
     expect(mockOnClose).toHaveBeenCalled();
@@ -103,7 +125,11 @@ describe('TodoModal Component', () => {
       completed: false,
     };
 
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="edit" initialValues={mockTodo} />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="edit" initialValues={mockTodo} />
+      </TestWrapper>
+    );
 
     // Edit form fields
     await user.clear(screen.getByDisplayValue('Test Todo'));
@@ -123,6 +149,7 @@ describe('TodoModal Component', () => {
       title: 'Updated Todo',
       description: 'Updated Description',
       completed: true,
+      dueDate: undefined,
     });
 
     // Should close the modal
@@ -131,7 +158,11 @@ describe('TodoModal Component', () => {
 
   it('closes the modal when cancel button is clicked', async () => {
     const user = userEvent.setup();
-    render(<TodoModal isOpen={true} onClose={mockOnClose} mode="create" />);
+    render(
+      <TestWrapper>
+        <TodoModal isOpen={true} onClose={mockOnClose} mode="create" />
+      </TestWrapper>
+    );
 
     // Click cancel button
     await user.click(screen.getByText('Cancel'));

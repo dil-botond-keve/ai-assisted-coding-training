@@ -33,6 +33,16 @@ const TestComponent = () => {
 };
 
 describe('TodoContext', () => {
+  beforeEach(() => {
+    // Clear session storage before each test to ensure clean state
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    // Clean up after each test
+    sessionStorage.clear();
+  });
+
   it('provides empty todos array initially', () => {
     render(
       <TodoProvider>

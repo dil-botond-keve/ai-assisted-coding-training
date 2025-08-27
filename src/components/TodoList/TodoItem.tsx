@@ -1,5 +1,13 @@
 import React from 'react';
-import { ListItem, ListItemText, IconButton, Checkbox, Divider, Typography } from '@mui/material';
+import {
+  ListItem,
+  ListItemText,
+  IconButton,
+  Checkbox,
+  Divider,
+  Typography,
+  Box,
+} from '@mui/material';
 import type { Todo } from '../../types/Todo';
 import { useTodo } from '../../hooks/useTodo';
 
@@ -10,6 +18,28 @@ interface TodoItemProps {
 
 export const TodoItem: React.FC<TodoItemProps> = ({ todo, onEditClick }) => {
   const { toggleTodoCompletion, deleteTodo } = useTodo();
+
+  // Helper function to format due date and determine if overdue
+  const formatDueDate = (dueDate?: string) => {
+    if (!dueDate) return null;
+
+    const due = new Date(dueDate);
+    const now = new Date();
+    const isOverdue = due < now && !todo.completed;
+
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    };
+
+    return {
+      formatted: due.toLocaleDateString(undefined, formatOptions),
+      isOverdue,
+    };
+  };
+
+  const dueDateInfo = formatDueDate(todo.dueDate);
 
   return (
     <>
@@ -62,15 +92,32 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, onEditClick }) => {
             </Typography>
           }
           secondary={
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                textDecoration: todo.completed ? 'line-through' : 'none',
-              }}
-            >
-              {todo.description}
-            </Typography>
+            <Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                }}
+              >
+                {todo.description}
+              </Typography>
+              {dueDateInfo && (
+                <Typography
+                  variant="body2"
+                  data-testid={`due-date-${todo.id}`}
+                  sx={{
+                    color: dueDateInfo.isOverdue ? 'error.main' : 'text.secondary',
+                    fontWeight: dueDateInfo.isOverdue ? 600 : 400,
+                    textDecoration: todo.completed ? 'line-through' : 'none',
+                    mt: 0.5,
+                  }}
+                >
+                  Due: {dueDateInfo.formatted}
+                  {dueDateInfo.isOverdue && ' (Overdue)'}
+                </Typography>
+              )}
+            </Box>
           }
         />
       </ListItem>
